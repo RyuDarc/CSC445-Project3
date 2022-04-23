@@ -1,3 +1,4 @@
+package com.csc445.jrvv.pthree;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestApplication {

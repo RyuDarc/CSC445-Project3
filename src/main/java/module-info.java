@@ -1,4 +1,4 @@
-module com.csc445.jvrr.pthree {
+module com.csc445.jrvv.pthree {
     requires javafx.controls;
     requires javafx.fxml;
 
