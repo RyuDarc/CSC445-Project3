@@ -60,7 +60,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.csc445.jvrr.pthree/com.csc445.jvrr.pthree.HelloApplication</mainClass>
+                            <mainClass>com.csc445.jvrr.pthree/com.csc445.jrvv.pthree.HelloApplication</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
