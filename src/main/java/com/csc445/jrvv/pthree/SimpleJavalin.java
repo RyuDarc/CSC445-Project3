@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonElement;
 import io.javalin.Javalin;
 import io.javalin.websocket.WsContext;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -90,9 +91,44 @@ public class SimpleJavalin implements Server {
             bs.getFired(js);
         });
 
+        /**
+         * @POST
+         * receive any command in post payload and call controller to process
+         */
+        app.post("receiveCommand",ctx-> {
+            String command = ctx.body();
+            bs.receiveCommand(command);
+        });
+
+        
+
+    }
+
+
+    /**
+     * 
+     * @param payload Object Any object with toString() complaint
+     * @param host the host to communicate with
+     * @param endpoint the url to post
+     * @return String result
+     */
+    public String SendAnything(Object payload, String host, String endpoint){
+        HttpUrl url = new HttpUrl.Builder().scheme("http").host(host).addPathSegment(endpoint).build();
+        RequestBody body = RequestBody.create(payload.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        Response response = client.newCall(request).execute();
+        if (response.code() == 200) {
+            return response.body().string();
+        } else {
+            throw new RuntimeException("Request Failed");
+        }
     }
 
     public void SendSomething(JSONObject js, String host) throws IOException {
+        
         RequestBody body = RequestBody.create(js.toString(), JSON);
         Request request = new Request.Builder()
                 .url(host)
