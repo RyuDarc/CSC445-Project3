@@ -12,9 +12,21 @@ public interface Server {
      * @param data json->string
      */
     public void SendingData(String data);
+    
     /**
      * Fetch data from tcp/udp buffer
      * @return packet data in string(json string)
      */
     public List<String> ReceiveData();
+
+    /**
+     * Send message to server
+     * @return bool successful (http status 200)
+     * @throws illegalstate no server registered
+     */
+    public boolean toServer(Object message) throws java.lang.IllegalStateException;
+
+    /**
+     * Send message to client by asking server
+     */
 }

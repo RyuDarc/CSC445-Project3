@@ -1,5 +1,10 @@
 package com.csc445.jrvv.pthree;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonElement;
 import io.javalin.Javalin;
@@ -33,6 +38,22 @@ public class SimpleJavalin implements Server {
     OkHttpClient client = new OkHttpClient();
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     BattleShipGame bs = null;
+    Algorithm algorithm = Algorithm.HMAC256("battleship");
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
+    
+    
+
+    public String createToken(String payload){
+        String token = JWT.create()
+                .withIssuer("auth0")
+                .withClaim("payload",payload)
+                .sign(algorithm);
+    }
+
+    public String decodeToken(String token) throws JWTVerificationException{
+        DecodedJWT jwt = verifier.verify(token);
+        return jwt.getPayload();
+    }
 
     public SimpleJavalin(BattleShipGame bs) {
         // Javalin app = Javalin.create(config -> {
@@ -63,6 +84,26 @@ public class SimpleJavalin implements Server {
         app.get("/register", ctx -> {
             bs.addClient(ctx.body());
             this.ActiveHost.add(ctx.body());
+        });
+
+        //generate JTW token test
+        app.get("/generate", ctx -> {
+            JSONObject json = new JSONObject();
+            json.put("test","True");
+            String token = createToken(json.toString());
+            ctx.json(token);
+        });
+
+        app.post("/verify",ctx->{
+            try{
+                String payload = decodeToken(ctx.body());
+                JSONObject json = new JSONObject();
+                json.put("status",200);
+                ctx.json(json.toString());
+                ctx.status(200);
+            }catch(Exception e){
+                ctx.status(401);
+            }
         });
 
         // heartbeat
@@ -155,15 +196,6 @@ public class SimpleJavalin implements Server {
         });
     }
 
-    // Builds a HTML element with a sender-name, a message, and a timestamp
-    // private static String createHtmlMessageFromSender(String sender, String
-    // message) {
-    // return article(
-    // b(sender + " says:"),
-    // span(attrs(".timestamp"), new SimpleDateFormat("HH:mm:ss").format(new
-    // Date())),
-    // p(message)).render();
-    // }
 
     @Override
     public void StartConnection() {
@@ -255,5 +287,25 @@ public class SimpleJavalin implements Server {
 
     public static void main(String[] args) {
         // SimpleJavalin sj = new SimpleJavalin(7000);
+    }
+
+    @Override
+    public boolean toServer(Object message) throws IllegalStateException {
+        // TODO Auto-generated method stub
+        RequestBody body = RequestBody.create(message.toString(), JSON);
+        try{
+            Request request = new Request.Builder()
+                .url(this.server)
+                .post(body)
+                .build();
+            Response response = client.newCall(request).execute();
+            if (response.code() == 200) {
+                return true;
+            } 
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return false;
     }
 }
