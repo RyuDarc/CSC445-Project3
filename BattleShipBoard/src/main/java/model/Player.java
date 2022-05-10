@@ -6,7 +6,7 @@ public class Player
     public String ipv4;
     public int port;
     public BoardMatrix boardMatrix;
-    protected boolean selfTurn;
+    public boolean selfTurn;
     
     public Player(String ipv4, int port)
     {

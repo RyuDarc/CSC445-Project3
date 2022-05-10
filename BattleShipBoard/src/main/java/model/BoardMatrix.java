@@ -87,7 +87,7 @@ public class BoardMatrix
 
         for(String codeName : squareCodeNames)
         {
-            if(selfBoardMap.get(codeName).isShipPart)
+            if(selfBoardMap.get(codeName.toUpperCase()).isShipPart)
                 return false;
         }
 
@@ -95,7 +95,7 @@ public class BoardMatrix
         {
             Ship newShip = new Ship(shipName, squareCodeNames.length, squareCodeNames);
             shipList.add(newShip);
-            selfBoardMap.get(codeName).placeShipPart(newShip);
+            selfBoardMap.get(codeName.toUpperCase()).placeShipPart(newShip);
         }
 
         currentAviableShip--;

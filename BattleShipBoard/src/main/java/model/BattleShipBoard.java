@@ -20,10 +20,12 @@ public class BattleShipBoard
 
     public boolean isHost;
     private Player self;
-    private LinkedList<Player> playerList;
+    public LinkedList<Player> playerList;
     private int turn;
     private int phase;
-
+    
+    public int lastestCommandCode;
+    
     public BattleShipBoard(String ipv4, int port, boolean isHost, String name)
     {
         phase = 1;
@@ -61,7 +63,7 @@ public class BattleShipBoard
         playerList.add(player);
     }
 
-    private Player getSelfFromPlayerList()
+    public Player getSelfFromPlayerList()
     {
         for(Player player : playerList)
         {
@@ -73,6 +75,11 @@ public class BattleShipBoard
         }
 
         return null;
+    }
+    
+    public void resetSelfBoard()
+    {
+        this.getSelfFromPlayerList().boardMatrix = new BoardMatrix();
     }
 
     //----------------------------------------Board setup---------------------------------------------
@@ -173,7 +180,7 @@ public class BattleShipBoard
     public boolean placeCarrier(String[] square)
     {
         //check take 5 square
-        if(!isValidPlaceShip(square) || square.length != 5)
+        if(square.length != 5)
             return false;
 
         if(!self.boardMatrix.placeShip(square, "Carrier"))
@@ -190,7 +197,7 @@ public class BattleShipBoard
     public boolean placeBattleShip(String[] square)
     {
         //check take 4 square
-        if(!isValidPlaceShip(square) || square.length != 4)
+        if(square.length != 4)
             return false;
 
         if(!self.boardMatrix.placeShip(square, "BattleShip"))
@@ -207,7 +214,7 @@ public class BattleShipBoard
     public boolean placeCrusier(String[] square)
     {
         //check take 3 square
-        if(!isValidPlaceShip(square) || square.length != 3)
+        if(square.length != 3)
             return false;
 
         if(!self.boardMatrix.placeShip(square, "Crusier"))
@@ -217,14 +224,14 @@ public class BattleShipBoard
     }
 
     /**
-     * place/set a submarine ship with length of 2 square on the self board (only valid for case: vertical or horizontal)
-     * @param square list of 2 square code name
+     * place/set a submarine ship with length of 3 square on the self board (only valid for case: vertical or horizontal)
+     * @param square list of 3 square code name
      * @return true if it a valid placement else false
      */
     public boolean placeSubmarine(String[] square)
     {
-        //check take 2 square
-        if(!isValidPlaceShip(square) || square.length != 2)
+        //check take 3 square
+        if(square.length != 3)
             return false;
 
         if(!self.boardMatrix.placeShip(square, "Submarine"))
@@ -234,14 +241,14 @@ public class BattleShipBoard
     }
 
     /**
-     * place/set a destroyer ship with length of 1 square on the self board (only valid for case: vertical or horizontal)
-     * @param square list of 1 square code name
+     * place/set a destroyer ship with length of 2 square on the self board (only valid for case: vertical or horizontal)
+     * @param square list of 2 square code name
      * @return true if it a valid placement else false
      */
     public boolean placeDestroyer(String[] square)
     {
-        //check take 1 square
-        if(!isValidPlaceShip(square) || square.length != 1)
+        //check take 2 square
+        if(square.length != 2)
             return false;
 
         if(!self.boardMatrix.placeShip(square, "Destroyer"))
@@ -311,7 +318,8 @@ public class BattleShipBoard
     public String handleCommand(String jsonPacket) throws NullPointerException
     {
         Command command = Command.fromJson(jsonPacket);
-
+        this.lastestCommandCode = command.commandCode;
+        
         if(command.commandCode <= 0)
             throw new NullPointerException("can't handle command because invalid json packet");
 
@@ -365,8 +373,36 @@ public class BattleShipBoard
         {
             addPlayer(command.battleShipBoard.self);
         }
+        
+        if(command.commandCode == Command.KEEPALIVE)
+        {
+            this.addPlayer(command.player);
+            
+            return createUpdateBoardCommand();
+        }
+        
+        if(command.commandCode == Command.REQUESTKEEPALIVE)
+        {
+            return createKeepAlive();
+        }
 
         return null;
+    }
+    
+    public String createKeepAlive()
+    {
+        Command command = new Command(Command.KEEPALIVE);
+        
+        command.player = this.getSelfFromPlayerList();
+        
+        return command.toJson();
+    }
+    
+    public String createRequestKeepAlive()
+    {
+        Command command = new Command(Command.REQUESTKEEPALIVE);
+        
+        return command.toJson();
     }
 
     /**
@@ -415,6 +451,13 @@ public class BattleShipBoard
 
         return command.toJson();
     }
+    
+    public String createWinnerCommand()
+    {
+        Command command = new Command(Command.WINNER);
+        
+        return command.toJson();
+    }
 
     private String toJson()
     {
@@ -434,7 +477,7 @@ public class BattleShipBoard
         // this.playerList = newPlayerList;
     }
 
-    private Player getPlayer(String ipv4, int port, String name)
+    public Player getPlayer(String ipv4, int port, String name)
     {
         for(Player player : playerList)
         {
@@ -443,5 +486,23 @@ public class BattleShipBoard
         }
 
         return null;
+    }
+    
+    public void shufflePlayerTurn()
+    {
+        for(Player player : playerList)
+            player.selfTurn = false;
+        Random random = new Random();
+        int num = random.nextInt(playerList.size());
+        playerList.get(num).selfTurn = true;
+    }
+    
+    public void removeAllButSelf()
+    {
+        Player self = this.getSelfFromPlayerList();
+        
+        playerList.clear();
+        
+        playerList.add(self);
     }
 }

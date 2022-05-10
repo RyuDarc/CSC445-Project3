@@ -10,6 +10,9 @@ public class Command
     public static int SHOOT = 1;
     public static int UPDATEBOARD = 2;
     public static int ADDPLAYER = 3;
+    public static int KEEPALIVE = 4;
+    public static int REQUESTKEEPALIVE = 5;
+    public static int WINNER = 6;
 
     public int commandCode;
     public String hitAtCodeName;
@@ -17,6 +20,7 @@ public class Command
     public int senderPort;
     public String senderName;
     public BattleShipBoard battleShipBoard;
+    public Player player;
 
     public Command(int commandCode)
     {
