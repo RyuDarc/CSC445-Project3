@@ -1,6 +1,9 @@
 
 package model;
 
+import java.net.InetAddress;
+
+import okhttp3.*;
 public class SimpleTCP 
 {
     public SimpleTCPClient client;
@@ -29,6 +32,32 @@ public class SimpleTCP
             }
             
         };
+    }
+
+    public static String getExternalIP() {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl url = new HttpUrl.Builder().scheme("http").host("ifconfig.io").addPathSegment("ip").build();
+        // RequestBody body = RequestBody.create(payload.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        try {
+            Response response = client.newCall(request).execute();
+            if (response.code() == 200) {
+                return response.body().string();
+            } else {
+                try {
+                    return InetAddress.getLocalHost().getHostAddress();
+                } catch (Exception ex) {
+
+                }
+
+            }
+        } catch (Exception e) {
+
+        }
+        return null;
     }
 
     public void startServer()

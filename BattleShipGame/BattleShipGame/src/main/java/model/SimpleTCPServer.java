@@ -13,6 +13,13 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
 public class SimpleTCPServer implements Runnable
 {
     public static void main(String[] args) 
@@ -41,6 +48,7 @@ public class SimpleTCPServer implements Runnable
     LinkedList<ClientHandler> clientList;
     int numbeOfConnection = 5;
     public boolean running;
+    Algorithm algorithm = Algorithm.HMAC256("battleship");
 
     public SimpleTCPServer()
     {
@@ -108,7 +116,8 @@ public class SimpleTCPServer implements Runnable
                 try 
                 {
                     Thread.sleep(milli);
-                    sendToAllClient(data);
+                    String d = createToken(data);
+                    sendToAllClient(d);
                 } 
                 catch (InterruptedException ex) {
                     Logger.getLogger(SimpleTCPServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -117,6 +126,15 @@ public class SimpleTCPServer implements Runnable
         };
         thread.start();
     }
+    
+    protected String createToken(String payload) {
+        String token = JWT.create()
+                .withIssuer("auth0")
+                .withClaim("payload", payload)
+                .sign(algorithm);
+        return token;
+    }
+
 
     public void sendToAllClient(String data)
     {
@@ -125,7 +143,9 @@ public class SimpleTCPServer implements Runnable
 
         for (ClientHandler clientHandler : clientList) 
         {
-            clientHandler.sendToClient(data);
+            String d = createToken(data);
+            
+            clientHandler.sendToClient(d);
         }
     }
 

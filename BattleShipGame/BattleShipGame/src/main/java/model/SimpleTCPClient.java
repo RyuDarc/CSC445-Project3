@@ -8,8 +8,17 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Base64;
 import java.util.Scanner;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 public class SimpleTCPClient extends TCPClient implements Runnable
 {
     public static void main(String[] args) 
@@ -130,7 +139,8 @@ class TCPClient
     String ip = "localhost";
     int port = 1111;
     private Socket socket = null;
-
+    Algorithm algorithm = Algorithm.HMAC256("battleship");
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
     private PrintWriter outToServer;
     private BufferedReader inFromServer;
 
@@ -149,11 +159,28 @@ class TCPClient
      * this function will send data to server
      * @param data data to be send
      */
+
+    protected String createToken(String payload) {
+        String token = JWT.create()
+                .withIssuer("auth0")
+                .withClaim("payload", payload)
+                .sign(algorithm);
+        return token;
+    }
+
+    protected String decodeToken(String token) throws JWTVerificationException {
+        DecodedJWT jwt = verifier.verify(token);
+        JsonObject pay = new Gson().fromJson(new String(Base64.getDecoder().decode(jwt.getPayload())).replace("\\\\", ""),
+                JsonObject.class);
+        return pay.get("payload").toString();
+    }
+
     public void SendToServer(String data)
     {
         // System.out.println("send data: " + data);
         //send msg to server
-        outToServer.println(data);
+        String d = createToken(data);
+        outToServer.println(d);
         outToServer.flush();
         // outToServer.println(data);
         // outToServer.flush();
