@@ -6,6 +6,7 @@ package vincent.battleshipgame;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.management.BadAttributeValueExpException;
@@ -13,6 +14,16 @@ import model.BattleShipBoard;
 import model.Command;
 import model.Player;
 import model.SimpleTCP;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  *
@@ -26,6 +37,8 @@ public class MainFrame extends javax.swing.JFrame
     String ip;
     int port;
     SimpleTCP simpleTCP;
+    Algorithm algorithm = Algorithm.HMAC256("battleship");
+    JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
     
     /**
      * Creates new form MainFrame
@@ -467,6 +480,22 @@ public class MainFrame extends javax.swing.JFrame
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
+    protected String createToken(String payload) {
+        String token = JWT.create()
+                .withIssuer("auth0")
+                .withClaim("payload", payload)
+                .sign(algorithm);
+        return token;
+    }
+
+    protected String decodeToken(String token) throws JWTVerificationException {
+        DecodedJWT jwt = verifier.verify(token);
+        JsonObject test = JsonParser.parseString(
+                new String(Base64.getDecoder().decode(jwt.getPayload()))).getAsJsonObject();
+        String payload = test.get("payload").getAsString();
+        return payload;
+    }
+
     private void hostGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hostGameButtonActionPerformed
         // TODO add your handling code here:
         this.placeShipButton.setEnabled(true);
@@ -491,7 +520,10 @@ public class MainFrame extends javax.swing.JFrame
         {
             @Override
             public void handleRecieveData(String data) {
-                handleRecieveFromClient(data);
+                //the data should be in token type
+                String d = decodeToken(data);
+
+                handleRecieveFromClient(d);
             }
             @Override
             public void handleDisconnect(String ip, int port) 
@@ -563,7 +595,8 @@ public class MainFrame extends javax.swing.JFrame
             @Override
             public void handleRecieveData(String data) 
             {
-                handleRecieveFromServer(data);
+                String d = decodeToken(data);
+                handleRecieveFromServer(d);
             }
             
             @Override
@@ -711,6 +744,12 @@ public class MainFrame extends javax.swing.JFrame
     // End of variables declaration//GEN-END:variables
     public static String getLocalHost()
     {
+        try{
+            return SimpleTCP.getExternalIP();
+        }catch(Exception e){
+
+        }
+        
         try 
         {
             return InetAddress.getLocalHost().getHostAddress();
@@ -870,7 +909,8 @@ public class MainFrame extends javax.swing.JFrame
                 {
                     @Override
                     public void handleRecieveData(String data) {
-                        handleRecieveFromClient(data);
+                        String d = decodeToken(data);
+                        handleRecieveFromClient(d);
                     }
                     @Override
                     public void handleDisconnect(String ip, int port) 
@@ -894,7 +934,8 @@ public class MainFrame extends javax.swing.JFrame
                     @Override
                     public void handleRecieveData(String data) 
                     {
-                        handleRecieveFromServer(data);
+                        String d = decodeToken(data);
+                        handleRecieveFromServer(d);
                     }
 
                     @Override
