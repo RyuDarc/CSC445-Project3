@@ -19,7 +19,7 @@ public class BattleShipBoard
     public static final int GAMEPHASE = 2;
 
     public boolean isHost;
-    private Player self;
+    public Player self;
     public LinkedList<Player> playerList;
     private int turn;
     private int phase;

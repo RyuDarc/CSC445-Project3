@@ -39,7 +39,7 @@ public class MainFrame extends javax.swing.JFrame
     SimpleTCP simpleTCP;
     Algorithm algorithm = Algorithm.HMAC256("battleship");
     JWTVerifier verifier = JWT.require(algorithm).withIssuer("auth0").build();
-    
+    SWINGactualBoard actualboard;
     /**
      * Creates new form MainFrame
      */
@@ -47,6 +47,10 @@ public class MainFrame extends javax.swing.JFrame
     {
         initComponents();
         isHost = false;
+    }
+
+    public void setSWINGactualBoard(SWINGactualBoard actboard){
+        this.actualboard = actboard;
     }
 
     /**
@@ -470,7 +474,7 @@ public class MainFrame extends javax.swing.JFrame
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(tabbedPanel)
                 .addContainerGap())
@@ -533,6 +537,9 @@ public class MainFrame extends javax.swing.JFrame
             }
         };
         this.simpleTCP.startServer();
+        SWINGputPiecesOnBoard ppob = new SWINGputPiecesOnBoard(this);
+        ppob.setVisible(true);
+        
     }//GEN-LAST:event_hostGameButtonActionPerformed
 
     private void placeShipButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_placeShipButtonActionPerformed
@@ -572,15 +579,19 @@ public class MainFrame extends javax.swing.JFrame
         tabbedPanel.setSelectedIndex(1);
         
         this.startGameButton.setEnabled(false);
+        SWINGputPiecesOnBoard ppob = new SWINGputPiecesOnBoard(this);
+        ppob.setVisible(true);
     }//GEN-LAST:event_connectButtonActionPerformed
 
-    private void startGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startGameButtonActionPerformed
+    public void startGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startGameButtonActionPerformed
         // TODO add your handling code here:
         this.placeShipButton.setEnabled(false);
         this.startGameButton.setEnabled(false);
+        selfBoardTextBox.setText(board.printSelfBoard());
         String response = this.board.startTheGame();
         simpleTCP.server.sendToAllClient(response);
         checkSelfTurn();
+        
     }//GEN-LAST:event_startGameButtonActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -588,7 +599,7 @@ public class MainFrame extends javax.swing.JFrame
         this.tabbedPanel.setSelectedIndex(3);
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void lockInBoardButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lockInBoardButtonActionPerformed
+    public void lockInBoardButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lockInBoardButtonActionPerformed
         // TODO add your handling code here:
         this.simpleTCP = new SimpleTCP(this.ip, this.port)
         {
@@ -613,6 +624,7 @@ public class MainFrame extends javax.swing.JFrame
             this.placeShipButton.setEnabled(false);
             this.lockInBoardButton.setEnabled(false);
             simpleTCP.client.SendToServer(board.createAddPlayerCommand());
+            selfBoardTextBox.setText(board.printSelfBoard());
         }
     }//GEN-LAST:event_lockInBoardButtonActionPerformed
 
@@ -648,7 +660,35 @@ public class MainFrame extends javax.swing.JFrame
         
         
     }//GEN-LAST:event_shootButtonActionPerformed
-
+    void shootButtonActionPerformed(String square) {                                            
+        // TODO add your handling code here:
+        
+        
+        try 
+        {
+            String jsonPacket = board.createShootCommand(square);
+            
+            if(this.isHost)
+            {
+                board.handleCommand(jsonPacket);
+                simpleTCP.server.sendToAllClient(jsonPacket);
+                
+                if(!checkGameover())
+                    checkSelfTurn();
+                
+                
+            }
+            else
+            {
+                simpleTCP.client.SendToServer(jsonPacket);
+            }
+        } 
+        catch (BadAttributeValueExpException ex) 
+        {
+            ex.printStackTrace();
+        }
+    }
+    
     private void resumeGameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resumeGameButtonActionPerformed
         // TODO add your handling code here:
         this.resumeGameButton.setEnabled(false);
