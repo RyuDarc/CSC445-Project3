@@ -5,12 +5,15 @@ public class Square
     public String codeName;
     public boolean missHit;
     public boolean hit;
+    public boolean gethit;
     public boolean isShipPart;
     public Ship ship;
 
     public Square(String codeName)
     {
         hit = false;
+        missHit = false;
+        gethit = false;
         isShipPart = false;
         this.codeName = codeName;
     }
@@ -26,13 +29,11 @@ public class Square
     {
         if(missHit)
             return "[O]";
-
         if(hit)
             return "[X]";
 
         if(isShipPart)
             return String.format("[%s]", (ship.name.charAt(0) + "").toUpperCase());
-
         return codeName;
     }
 }

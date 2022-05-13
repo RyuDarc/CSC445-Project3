@@ -74,6 +74,11 @@ public class BoardMatrix
         square.hit = true;
     }
 
+    public void registerHit(String squareCodeName,boolean isSelfTurn) {
+        Square square = shootBoardMap.get(squareCodeName);
+        square.hit = true;
+    }
+
     public void registerMissHit(String squareCodeName)
     {
         Square square = shootBoardMap.get(squareCodeName);

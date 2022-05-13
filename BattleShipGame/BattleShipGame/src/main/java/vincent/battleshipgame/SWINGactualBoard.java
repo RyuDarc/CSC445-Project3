@@ -58,10 +58,14 @@ public class SWINGactualBoard extends javax.swing.JFrame {
             {
                 try{
                     // Container contentPane = this.getContentPane();
-                    Thread.sleep(50);
+                    Thread.sleep(100);
                     // if(!this.mainframe.board.isSelfTurn()){
                     //     this.setGlassPane(new JPanel());
                     // }
+                    if(this.mainframe.board.isGameOver()){
+                        String winner = this.mainframe.getWinner();
+                        
+                    }
                     if(this.mainframe.board.isSelfTurn()){
                         if(this.mainframe.isHost){
                             jLabel6.setText("Host: This is your turn.");
@@ -76,20 +80,46 @@ public class SWINGactualBoard extends javax.swing.JFrame {
                             jLabel6.setText("Client: Not your TURN");
                         }
                     }
-
-                    for(Square s: this.mainframe.board.self.boardMatrix.selfBoardMap.values()){
-                        if(s.hit){
-                            for(JButton but : allButtons){
-                                if(but.getName().toUpperCase().equals(s.codeName.toUpperCase())){
-                                    java.awt.EventQueue.invokeLater(new Runnable() {
-                                        public void run() {
-                                            but.setBackground(Color.black);
-                                        }
-                                    });
+                    for (JButton but : allButtons) {
+                        //render the fire button first-> misshit -> hit
+                        //where do you fire? -> fire is rendered at the selfboard
+                        String name = but.getName().toUpperCase();
+                        Square s = this.mainframe.board.self.boardMatrix.selfBoardMap.get(name);
+                        Square ss = this.mainframe.board.self.boardMatrix.shootBoardMap.get(name);
+                        if(ss.hit){
+                            java.awt.EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    //red means you successfully hit someone
+                                    but.setBackground(Color.red);
                                 }
-                            }
+                            });
                         }
+                        else if(s.hit){
+                            java.awt.EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    
+                                    but.setBackground(Color.black);
+                                }
+                            });
+                        }else if(ss.missHit){
+                            java.awt.EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    // gray means you don't hit someone
+                                    but.setBackground(Color.gray);
+                                }
+                            });
+                        }else if(s.missHit){
+                            java.awt.EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    // gray means you don't hit someone
+                                    but.setBackground(Color.cyan);
+                                }
+                            });
+                        }
+                        
                     }
+            
+                    
                     
                 }catch(Exception ex){
                     ex.printStackTrace();

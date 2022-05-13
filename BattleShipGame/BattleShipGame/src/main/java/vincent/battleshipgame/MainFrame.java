@@ -896,6 +896,19 @@ public class MainFrame extends javax.swing.JFrame
         return false;
     }
     
+    public String getWinner(){
+        Player winner = null;
+
+        for (Player player : board.playerList) {
+            if (!player.boardMatrix.isAllShipShink()) {
+                winner = player;
+                return winner.name;
+            }
+        }
+        return "";
+        
+    }
+
     public void displayWinner()
     {
         Player winner = null;
@@ -999,7 +1012,7 @@ public class MainFrame extends javax.swing.JFrame
             checkConnection();
         }
     }
-    
+    //server case
     public void handleDisconnectToClient(String ip, int port)
     { 
         this.shootButton.setEnabled(false);
@@ -1014,6 +1027,8 @@ public class MainFrame extends javax.swing.JFrame
         this.resumeGameButton.setEnabled(true);
         
         checkConnection();
+        SWINGputPiecesOnBoard ppob = new SWINGputPiecesOnBoard(this);
+        ppob.setVisible(true);
     }
     
     public void resetGame()
